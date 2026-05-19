@@ -1,0 +1,145 @@
+{
+  "name": "Weekly Dev Summary — n8n + Claude API",
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Weekly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "weeks", "minutesInterval": 1 }],
+          "weekdayHours": { "hour": 9, "minute": 0, "weekday": 1 }
+        }
+      }
+    },
+    {
+      "id": "github-activity",
+      "name": "Fetch GitHub Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/search/issues?q=author:{{$env.GITHUB_USER}}+updated:>{{$moment().subtract(7,'days').format('YYYY-MM-DD')}}&sort=updated&order=desc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "headers": {
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer {{$env.GITHUB_TOKEN}}"
+          }
+        }
+      }
+    },
+    {
+      "id": "github-repos",
+      "name": "Fetch Repo Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 500],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/users/{{$env.GITHUB_USER}}/events?per_page=50",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "headers": {
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": "Bearer {{$env.GITHUB_TOKEN}}"
+          }
+        }
+      }
+    },
+    {
+      "id": "merge-data",
+      "name": "Merge Activity Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition"
+      }
+    },
+    {
+      "id": "format-prompt",
+      "name": "Build Claude Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [850, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "prompt",
+              "value": "Summarize this developer's weekly activity in a friendly Markdown digest.\n\nIssues & PRs:\n{{$json[\"issues\"]}}\n\nEvents:\n{{$json[\"events\"]}}\n\nInclude:\n- Top accomplishments\n- Key metrics (PRs merged, issues closed)\n- Areas of focus\n- A tip or observation\n\nFormat with sections, emojis, and actionable takeaways."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "claude-api",
+      "name": "Claude API Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "claude-sonnet-4-20250514" },
+            { "name": "max_tokens", "value": 2000 },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"user\", \"content\": \"{{$json.prompt}}\"}]"
+            }
+          ]
+        },
+        "options": {
+          "headers": {
+            "x-api-key": "{{$env.CLAUDE_API_KEY}}",
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+          }
+        }
+      }
+    },
+    {
+      "id": "email-output",
+      "name": "Send Email Digest",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "parameters": {
+        "fromEmail": "digest@yourdomain.com",
+        "toEmail": "{{$env.DIGEST_EMAIL}}",
+        "subject": "Weekly Dev Summary — {{$moment().format('MMM D, YYYY')}}",
+        "text": "{{$json.content}}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "schedule-trigger": { "main": [[{ "node": "github-activity", "type": "main", "index": 0 }]] },
+    "github-activity": { "main": [[{ "node": "merge-data", "type": "main", "index": 0 }]] },
+    "github-repos": { "main": [[{ "node": "merge-data", "type": "main", "index": 1 }]] },
+    "merge-data": { "main": [[{ "node": "format-prompt", "type": "main", "index": 0 }]] },
+    "format-prompt": { "main": [[{ "node": "claude-api", "type": "main", "index": 0 }]] },
+    "claude-api": { "main": [[{ "node": "email-output", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "timezone": "UTC",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "staticData": null,
+  "tags": ["weekly-digest", "automation", "claude", "github"]
+}
