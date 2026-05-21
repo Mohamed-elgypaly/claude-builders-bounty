@@ -91,16 +91,58 @@ def get_repo_url():
         return url
     return None
 
+def calculate_stability_rating(categories):
+    """Calculate a stability score (0-100%) and risk level."""
+    breaking = len(categories.get("Breaking Changes", []))
+    fixes = len(categories.get("Fixed", []))
+    total = sum(len(items) for items in categories.values())
+    
+    if total == 0:
+        return 100, "STABLE"
+        
+    # Each breaking change takes 20% stability
+    # Each fix takes 5% stability (indicates regressions or instability)
+    penalty = (breaking * 20) + (fixes * 5)
+    score = max(0, 100 - penalty)
+    
+    if breaking > 0 or score < 50:
+        return score, "CAUTION"
+    if score < 85:
+        return score, "STABLE"
+    return score, "EXCELLENT"
+
 def generate_markdown(categories, repo_url=None, new_tag=None):
     today = datetime.now().strftime("%Y-%m-%d")
     version_header = f"[{new_tag}] - {today}" if new_tag else "[Unreleased]"
+    score, level = calculate_stability_rating(categories)
     
     lines = [f"# Changelog", ""]
     lines.append(f"## {version_header}")
+    lines.append("")
+    lines.append(f"### 🚀 Release Summary")
+    lines.append(f"- **Stability Rating**: {score}%")
+    lines.append(f"- **Risk Level**: {level}")
+    lines.append(f"- **Total Commits**: {sum(len(items) for items in categories.values())}")
+    lines.append("")
+
+    # Category Mapping with Icons
+    ICON_MAP = {
+        "Breaking Changes": "💥 Breaking Changes",
+        "Added": "✨ Added",
+        "Fixed": "🐛 Fixed",
+        "Changed": "♻️ Changed",
+        "Removed": "🗑️ Removed",
+        "Documentation": "📝 Documentation",
+        "Performance": "⚡ Performance",
+        "Testing": "🧪 Testing",
+        "Build": "📦 Build",
+        "CI/CD": "⚙️ CI/CD",
+        "Maintenance": "🔧 Maintenance"
+    }
     
     for cat, items in categories.items():
         if items:
-            lines.append(f"### {cat}")
+            lines.append(f"### {ICON_MAP.get(cat, cat)}")
             for h, subject in items:
                 # Linkify PR numbers if repo_url is available
                 if repo_url:
