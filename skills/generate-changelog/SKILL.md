@@ -29,6 +29,9 @@ Generates the `CHANGELOG.md` file.
    - `Changed`: All other commits (refactor, docs, chore, etc.)
 4. Formats the output into a clean, Markdown-based `CHANGELOG.md`.
 
-## Implementation Detail
+## Advanced Features
 
-The skill executes a Python script (`scripts/generate_changelog.py`) which handles the logic of interacting with git and formatting the markdown.
+- **Breaking Change Detection**: Automatically identifies breaking changes using the `!` suffix in conventional commits (e.g., `feat!: ...`) or "BREAKING CHANGE" in the subject.
+- **GitHub Integration**: If a `remote origin` is set, the skill automatically linkifies commit hashes and PR numbers (#123) in the generated Markdown.
+- **Conventional Commits Support**: Smart categorization for `feat`, `fix`, `docs`, `perf`, `test`, `build`, `ci`, `chore`, `refactor`, and `style`.
+- **Automatic Tagging**: Detects the latest tag and only processes new commits.
