@@ -1,53 +1,29 @@
-# Claude Builders Bounty 🤖
+# Destructive Bash Command Hook for Claude Code
 
-> A community bounty board for Claude Code builders.
+This hook intercepts and blocks dangerous bash commands in Claude Code before they are executed.
 
-Building with Claude Code? Have tasks to delegate?
-Want to get paid for contributing to AI projects?
-You're in the right place.
+## Features
+- **Blocks Destructive Patterns**:
+  - `rm -rf`
+  - `DROP TABLE`
+  - `git push --force`
+  - `TRUNCATE`
+  - `DELETE FROM` (without a `WHERE` clause)
+- **Logging**: All blocked attempts are logged to `~/.claude/hooks/blocked.log` with timestamp, command, and project path.
+- **Claude Integration**: Returns a clear reason to Claude explaining why the command was blocked.
 
----
+## Installation
+
+Run these two commands from the root of this repository:
+
+```bash
+chmod +x install.sh
+./install.sh
+```
 
 ## How it works
+The hook follows the `PreToolUse` hook format. When a `Bash` tool is called, the hook checks the command against a set of regular expressions. If a match is found, it returns a `deny` decision to Claude Code.
 
-**To post a bounty**
-1. Open a GitHub issue with a clear description and acceptance criteria
-2. Comment `/opire create $XXX` in the issue to set the reward
-3. Share the link — contributors will find it
-
-**To claim a bounty**
-1. Browse the open issues below
-2. Comment `/opire try` in the issue you want to work on
-3. Submit a PR — payment is automatic on merge ✅
-
----
-
-## Active Bounties
-
-| # | Task | Amount | Status |
-|---|------|--------|--------|
-| [#1](../../issues/1) | SKILL: Generate a CHANGELOG from git history | $50 | 🟢 Open |
-| [#2](../../issues/2) | TEMPLATE: CLAUDE.md for a Next.js + SQLite project | $75 | 🟢 Open |
-| [#3](../../issues/3) | HOOK: Block destructive bash commands in Claude Code | $100 | 🟢 Open |
-| [#4](../../issues/4) | AGENT: PR reviewer with structured Markdown output | $150 | 🟢 Open |
-| [#5](../../issues/5) | WORKFLOW: n8n + Claude API — automated weekly dev summary | $200 | 🟢 Open |
-
----
-
-## Rules
-
-- Tasks must be related to Claude Code or AI tooling
-- Every issue must have clear acceptance criteria before a bounty is activated
-- Payment is handled by [Opire](https://opire.dev) (Stripe)
-- Quality over speed — a solid PR beats a fast one
-
----
-
-## Community
-
-- 🐦 X: [@ClaudeBounty](https://x.com/ClaudeBounty)
-- 📧 Contact: claudebounty@gmail.com
-
----
-
-*Started by the Claude builder community · March 2026 · MIT License*
+## Logging
+Blocked commands are logged in the following format:
+`2026-05-21T12:00:00.000000 | Command: rm -rf / | Project: /home/user/my-project`
