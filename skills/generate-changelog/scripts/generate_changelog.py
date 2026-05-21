@@ -102,7 +102,9 @@ def generate_markdown(categories, repo_url=None, new_tag=None):
         if items:
             lines.append(f"### {cat}")
             for h, subject in items:
+                # Linkify PR numbers if repo_url is available
                 if repo_url:
+                    subject = re.sub(r'#(\d+)', rf'[#\1]({repo_url}/pull/\1)', subject)
                     lines.append(f"- {subject} ([{h}]({repo_url}/commit/{h}))")
                 else:
                     lines.append(f"- {subject} ({h})")
