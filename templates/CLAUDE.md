@@ -54,9 +54,17 @@
 ## Component Patterns
 - Use **Server Actions** for all mutations. — *Rationale: Simplified form handling and automatic revalidation.*
 - **Form Handling**: Use `react-hook-form` with `zod`. — *Rationale: Best-in-class validation and UX.*
+- **Action UX**: Always use `useActionState` (React 19) for handling server action responses and state. — *Rationale: Standardized way to handle errors and pending states.*
+- **Optimistic Updates**: Use `useOptimistic` for high-frequency interactions (likes, toggles). — *Rationale: Zero-latency feel for users while background sync happens.*
 - **Icons**: Use `lucide-react` exclusively. — *Rationale: Consistent iconography and tree-shakable assets.*
 - **UI Components**: Use shadcn/ui. — *Rationale: Accessible, customizable, and widely adopted.*
 - Wrap complex components in `ErrorBoundary` and `Suspense`. — *Rationale: Enhances resilience and provides better loading states.*
+
+## Performance & UX
+- **Image Optimization**: Always use `next/image` with proper `priority` for LCP.
+- **Font Optimization**: Use `next/font/google`.
+- **Streaming**: Use granular `<Suspense>` boundaries to avoid blocking the whole page.
+- **URL State**: Use `nuqs` for managing complex filter/search states in the URL. — *Rationale: Type-safe, shareable state with minimal boilerplate.*
 
 ## Production & Security
 - **Deployment**: Vercel (Frontend) + Turso (Database).
