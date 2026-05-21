@@ -66,6 +66,23 @@
 - **Streaming**: Use granular `<Suspense>` boundaries to avoid blocking the whole page.
 - **URL State**: Use `nuqs` for managing complex filter/search states in the URL. — *Rationale: Type-safe, shareable state with minimal boilerplate.*
 
+## Testing & Quality Assurance
+- **Framework**: Vitest for unit/integration tests, Playwright for E2E. — *Rationale: Modern, fast, and excellent developer experience.*
+- **Commands**:
+  - `npm test`: Run unit/integration tests
+  - `npm run test:e2e`: Run Playwright E2E tests
+- **Database Testing**: Use a separate `test.sqlite` file. — *Rationale: Prevents polluting development data.*
+- **Mocks**: Minimal mocking. Prefer testing with a real SQLite file. — *Rationale: Higher confidence and more realistic tests.*
+
+## CI/CD Recommendations
+- **Platform**: GitHub Actions.
+- **Pipeline**:
+  1. **Lint & Type Check**: Ensure code quality.
+  2. **Unit Tests**: Run Vitest.
+  3. **Build**: Verify the application compiles correctly.
+  4. **E2E Tests**: Run Playwright against the production build.
+- **Deployment**: Auto-deploy to Vercel on successful `main` branch builds.
+
 ## Production & Security
 - **Deployment**: Vercel (Frontend) + Turso (Database).
 - **Environment Variables**: Use `.env.local` for development and Vercel dashboard for production. Never commit `.env` files.
