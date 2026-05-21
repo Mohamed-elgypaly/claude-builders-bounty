@@ -1,5 +1,5 @@
 {
-  "name": "Weekly GitHub Summary",
+  "name": "Weekly GitHub Summary (v2)",
   "nodes": [
     {
       "parameters": {
@@ -40,6 +40,14 @@
             {
               "name": "DISCORD_WEBHOOK_URL",
               "stringValue": "https://discord.com/api/webhooks/..."
+            },
+            {
+              "name": "SLACK_WEBHOOK_URL",
+              "stringValue": "https://hooks.slack.com/services/..."
+            },
+            {
+              "name": "CREATE_GITHUB_ISSUE",
+              "stringValue": "true"
             }
           ]
         },
@@ -129,7 +137,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const commits = $items('GitHub Commits').map(i => i.json.commit.message);\nconst issues = $items('GitHub Issues').map(i => i.json.title);\nconst prs = $items('GitHub PRs').filter(i => i.json.merged_at).map(i => i.json.title);\nconst lang = $node[\"Set Variables\"].json[\"LANGUAGE\"];\n\nreturn {\n  prompt: `Generate a narrative summary of the following GitHub activity from the past week in ${lang}.\\n\\nCommits:\\n${commits.join('\\n')}\\n\\nClosed Issues:\\n${issues.join('\\n')}\\n\\nMerged PRs:\\n${prs.join('\\n')}\\n\\nFocus on main themes and progress made.`\n};"
+        "jsCode": "const commits = $items('GitHub Commits').map(i => i.json.commit.message);\nconst issues = $items('GitHub Issues').map(i => i.json.title);\nconst prs = $items('GitHub PRs').filter(i => i.json.merged_at).map(i => i.json.title);\nconst lang = $node[\"Set Variables\"].json[\"LANGUAGE\"];\n\nreturn {\n  prompt: `Act as a Senior Developer Relations Engineer. Your task is to generate a high-quality, narrative weekly summary of the following GitHub activity in ${lang}.\\n\\nTarget Audience: Project maintainers and community members.\\nTone: Professional, encouraging, and clear.\\n\\nCommits from past 7 days:\\n${commits.join('\\n')}\\n\\nClosed Issues:\\n${issues.join('\\n')}\\n\\nMerged Pull Requests:\\n${prs.join('\\n')}\\n\\nStructure your response as follows:\\n1. 🚀 Highlights (2-3 key achievements)\\n2. 🛠️ Development Updates (Narrative summary of commits and PRs)\\n3. 🐛 Bug Fixes & Issues (Summary of resolved items)\\n4. 📈 Overall Progress (1 sentence summary of the week's momentum)\\n\\nEnsure the output is in ${lang}.`\n};"
       },
       "id": "e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b",
       "name": "Format Prompt",
@@ -178,8 +186,52 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1200,
-        300
+        1250,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "owner": "={{ $node[\"Set Variables\"].json[\"REPO_OWNER\"] }}",
+        "repository": "={{ $node[\"Set Variables\"].json[\"REPO_NAME\"] }}",
+        "title": "=Weekly Summary: {{ $now.minus(7, 'days').toFormat('yyyy-MM-dd') }} to {{ $now.toFormat('yyyy-MM-dd') }}",
+        "body": "={{ $json.text }}"
+      },
+      "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
+      "name": "Create GitHub Issue",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        400
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "github-cred-id"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $node[\"Set Variables\"].json[\"SLACK_WEBHOOK_URL\"] }}",
+        "method": "POST",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        }
+      },
+      "id": "c9d0e1f2-a3b4-5c6d-7e8f-9a0b1c2d3e4f",
+      "name": "Send to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1250,
+        600
       ]
     }
   ],
@@ -265,6 +317,16 @@
         [
           {
             "node": "Send to Discord",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create GitHub Issue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Slack",
             "type": "main",
             "index": 0
           }
