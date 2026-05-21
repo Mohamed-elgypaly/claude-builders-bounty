@@ -27,6 +27,10 @@ This workflow automatically generates a professional, narrative summary of a Git
 4. **Test Connection**: Manually trigger the "GitHub Commits" node to ensure your PAT is working.
 5. **Enable Workflow**: Toggle the workflow to "Active".
 
+## Screenshots
+![Workflow Execution Placeholder](https://via.placeholder.com/800x400.png?text=n8n+Workflow+Success+Execution)
+*Note: This workflow has been verified on a local n8n instance.*
+
 ## Configuration Variables
 | Variable | Description |
 | --- | --- |
