@@ -14,9 +14,11 @@ def run_command(command):
 def get_last_tag():
     return run_command("git describe --tags --abbrev=0")
 
-def get_commits(since_tag=None):
+def get_commits(since_tag=None, since_date=None):
     if since_tag:
         command = f'git log {since_tag}..HEAD --pretty=format:"%h %s"'
+    elif since_date:
+        command = f'git log --since="{since_date}" --pretty=format:"%h %s"'
     else:
         command = 'git log --pretty=format:"%h %s"'
     
@@ -111,15 +113,16 @@ def generate_markdown(categories, repo_url=None, new_tag=None):
 def main():
     parser = argparse.ArgumentParser(description="Generate a CHANGELOG.md from git history.")
     parser.add_argument("--tag", help="New tag for this version (e.g., v1.0.0)")
+    parser.add_argument("--since", help="Fetch commits since this date (e.g., '2023-01-01' or '1 week ago')")
     parser.add_argument("--output", default="CHANGELOG.md", help="Output file name")
     args = parser.parse_args()
 
-    last_tag = get_last_tag()
-    commits = get_commits(last_tag)
+    last_tag = get_last_tag() if not args.since else None
+    commits = get_commits(last_tag, args.since)
     repo_url = get_repo_url()
     
     if not commits:
-        print("No new commits found since last tag.")
+        print(f"No new commits found{' since ' + args.since if args.since else ' since last tag'}.")
         return
 
     categories = categorize_commits(commits)
