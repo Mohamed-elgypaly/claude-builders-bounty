@@ -3,8 +3,14 @@ import sys
 import argparse
 import os
 import re
-import google.generativeai as genai
+import json
 from datetime import datetime
+
+# Optional: anthropic is required for live AI reviews
+try:
+    import anthropic
+except ImportError:
+    anthropic = None
 
 # Security patterns to scan in the diff
 SECURITY_PATTERNS = {
@@ -39,16 +45,38 @@ def scan_security(diff):
             findings.append(name)
     return findings
 
-def analyze_diff(diff, security_findings):
+def analyze_diff(diff, security_findings, mock=False):
     """
-    Analyze the diff and return structured Markdown using AI.
+    Analyze the diff and return structured Markdown using Claude AI.
     """
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return "Error: GEMINI_API_KEY not found in environment. Please set it to use the AI reviewer."
+    if mock:
+        return f"""
+## 🤖 Claude Code PR Review (MOCK)
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-pro') # Using Pro for better analysis
+### 📝 Summary of Changes
+This is a mock review of the changes. The diff contains approximately {len(diff)} characters.
+
+### 📋 Per-File Analysis
+| File | Changes | Risk Level |
+|------|---------|------------|
+| (Mock) | Changes detected in diff | Low |
+
+### ⚠️ Identified Risks
+- **Security**: {', '.join(security_findings) if security_findings else 'No patterns detected.'}
+- **Logic**: Edge cases should be verified manually.
+
+### 📊 Confidence Score
+**High** (Rule-based scan)
+"""
+
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return "Error: ANTHROPIC_API_KEY not found in environment. Use --mock for testing without an API key."
+
+    if not anthropic:
+        return "Error: 'anthropic' package not installed. Run 'pip install anthropic'."
+
+    client = anthropic.Anthropic(api_key=api_key)
     
     security_note = ""
     if security_findings:
@@ -91,16 +119,23 @@ Your review MUST follow this structure:
 """
     
     try:
-        response = model.generate_content(prompt)
-        return response.text
+        message = client.messages.create(
+            model="claude-3-5-sonnet-20240620",
+            max_tokens=2048,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return message.content[0].text
     except Exception as e:
-        return f"Error calling AI API: {str(e)}"
+        return f"Error calling Claude API: {str(e)}"
 
 def main():
-    parser = argparse.ArgumentParser(description="PR Reviewer Agent - Analyze PR diffs with AI.")
+    parser = argparse.ArgumentParser(description="PR Reviewer Agent - Analyze PR diffs with Claude AI.")
     parser.add_argument("--pr", help="PR number or URL", required=True)
     parser.add_argument("--repo", help="Repository (owner/repo format)")
     parser.add_argument("--output", help="Output file path (Markdown)")
+    parser.add_argument("--mock", action="store_true", help="Run in mock mode (no AI call)")
     
     args = parser.parse_args()
     
@@ -126,8 +161,8 @@ def main():
     print("🔍 Scanning for security patterns...")
     security_findings = scan_security(diff)
     
-    print("🤖 Generating AI review...")
-    review = analyze_diff(diff, security_findings)
+    print(f"🤖 Generating {'mock ' if args.mock else ''}AI review...")
+    review = analyze_diff(diff, security_findings, mock=args.mock)
     
     if args.output:
         with open(args.output, "w") as f:
