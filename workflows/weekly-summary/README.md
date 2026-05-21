@@ -6,11 +6,13 @@ This workflow automatically generates a professional, narrative summary of a Git
 - **Trigger**: Weekly cron job (Fridays at 5 PM).
 - **Data Collection**: Fetches commits, closed issues, and merged PRs from the GitHub API.
 - **AI Narrative Engine**: Uses `claude-sonnet-4-20250514` with a sophisticated "DevRel" prompt to synthesize activity into a readable narrative.
-- **Multilingual**: Supports English, French, and other languages via configuration.
-- **Multi-Channel Delivery**:
-  - 💬 **Discord**: Posts a summary to your Discord channel.
-  - 💬 **Slack**: Posts a summary to your Slack workspace.
-  - 🎫 **GitHub Issues**: Automatically creates a "Weekly Summary" issue in the repository for archival and discussion.
+- **Robust Multilingual Support**: 
+  - Supports English and French out-of-the-box with translated section headers.
+  - Automatically adapts the Claude prompt based on the `LANGUAGE` variable.
+- **Smart Multi-Channel Delivery**:
+  - 💬 **Discord**: Posts to Discord only if a webhook URL is provided.
+  - 💬 **Slack**: Posts to Slack only if a webhook URL is provided.
+  - 🎫 **GitHub Issues**: Creates an issue only if `CREATE_GITHUB_ISSUE` is set to `true`.
 
 ## Setup Instructions (5 Steps)
 
