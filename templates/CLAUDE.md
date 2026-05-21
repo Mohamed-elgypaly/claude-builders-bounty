@@ -74,6 +74,12 @@
 - **Database Testing**: Use a separate `test.sqlite` file. — *Rationale: Prevents polluting development data.*
 - **Mocks**: Minimal mocking. Prefer testing with a real SQLite file. — *Rationale: Higher confidence and more realistic tests.*
 
+## AI-First Development (Claude/Gemini)
+- **Tool Use**: When using `run_shell_command`, always prefer `npm run ...` over raw commands to ensure environment variables are loaded.
+- **Context**: If you are unsure about a schema, check `lib/db/schema.ts` before proposing changes.
+- **Surgical Edits**: Prefer using targeted `replace` calls over overwriting entire files to maintain project history and avoid conflicts.
+- **Test-Driven**: Always look for an existing test file in `tests/` or `__tests__` before implementing a fix. If none exists, create one first.
+
 ## CI/CD Recommendations
 - **Platform**: GitHub Actions.
 - **Pipeline**:
