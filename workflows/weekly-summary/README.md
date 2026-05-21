@@ -7,8 +7,9 @@ This workflow automatically generates a professional, narrative summary of a Git
 - **Data Collection**: Fetches commits, closed issues, and merged PRs from the GitHub API.
 - **AI Narrative Engine**: Uses `claude-sonnet-4-20250514` with a sophisticated "DevRel" prompt to synthesize activity into a readable narrative.
 - **Multilingual**: Supports English, French, and other languages via configuration.
-- **Dual Delivery**:
-  - 💬 **Discord/Slack**: Posts a summary snippet to your community channel.
+- **Multi-Channel Delivery**:
+  - 💬 **Discord**: Posts a summary to your Discord channel.
+  - 💬 **Slack**: Posts a summary to your Slack workspace.
   - 🎫 **GitHub Issues**: Automatically creates a "Weekly Summary" issue in the repository for archival and discussion.
 
 ## Setup Instructions (5 Steps)
@@ -21,7 +22,8 @@ This workflow automatically generates a professional, narrative summary of a Git
    - `REPO_OWNER`: The owner of the repo.
    - `REPO_NAME`: The name of the repo.
    - `LANGUAGE`: `EN`, `FR`, `ES`, etc.
-   - `DISCORD_WEBHOOK_URL`: Your Discord/Slack channel webhook.
+   - `DISCORD_WEBHOOK_URL`: Your Discord channel webhook.
+   - `SLACK_WEBHOOK_URL`: Your Slack channel webhook.
 4. **Test Connection**: Manually trigger the "GitHub Commits" node to ensure your PAT is working.
 5. **Enable Workflow**: Toggle the workflow to "Active".
 
@@ -31,7 +33,8 @@ This workflow automatically generates a professional, narrative summary of a Git
 | `REPO_OWNER` | GitHub username or organization name. |
 | `REPO_NAME` | Repository name. |
 | `LANGUAGE` | Language for the summary (e.g., `EN` or `FR`). |
-| `DISCORD_WEBHOOK_URL` | The URL for Discord/Slack webhook delivery. |
+| `DISCORD_WEBHOOK_URL` | The URL for Discord webhook delivery. |
+| `SLACK_WEBHOOK_URL` | The URL for Slack webhook delivery. |
 | `CREATE_GITHUB_ISSUE` | Set to `true` to enable automatic issue creation. |
 
 ## Workflow Structure
