@@ -46,6 +46,10 @@
               "stringValue": ""
             },
             {
+              "name": "EMAIL_DESTINATION",
+              "stringValue": ""
+            },
+            {
               "name": "CREATE_GITHUB_ISSUE",
               "stringValue": "true"
             }
@@ -137,7 +141,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const commits = $items('GitHub Commits').map(i => i.json.commit.message);\nconst issues = $items('GitHub Issues').map(i => i.json.title);\nconst prs = $items('GitHub PRs').filter(i => i.json.merged_at).map(i => i.json.title);\nconst lang = $node[\"Set Variables\"].json[\"LANGUAGE\"] || 'EN';\n\nconst headers = {\n  'EN': {\n    'highlights': '🚀 Highlights',\n    'updates': '🛠️ Development Updates',\n    'bugs': '🐛 Bug Fixes & Issues',\n    'progress': '📈 Overall Progress'\n  },\n  'FR': {\n    'highlights': '🚀 Points forts',\n    'updates': '🛠️ Mises à jour du développement',\n    'bugs': '🐛 Corrections de bugs et problèmes',\n    'progress': '📈 Progrès global'\n  }\n};\n\nconst h = headers[lang] || headers['EN'];\n\nreturn {\n  prompt: `Act as a Senior Developer Relations Engineer. Your task is to generate a high-quality, narrative weekly summary of the following GitHub activity in ${lang}.\\n\\nTarget Audience: Project maintainers and community members.\\nTone: Professional, encouraging, and clear.\\n\\nCommits from past 7 days:\\n${commits.length > 0 ? commits.join('\\n') : 'No commits this week.'}\\n\\nClosed Issues:\\n${issues.length > 0 ? issues.join('\\n') : 'No issues closed this week.'}\\n\\nMerged Pull Requests:\\n${prs.length > 0 ? prs.join('\\n') : 'No PRs merged this week.'}\\n\\nStructure your response as follows:\\n1. ${h.highlights} (2-3 key achievements)\\n2. ${h.updates} (Narrative summary of commits and PRs)\\n3. ${h.bugs} (Summary of resolved items)\\n4. ${h.progress} (1 sentence summary of the week's momentum)\\n\\nEnsure the output is in ${lang}.`\n};"
+        "jsCode": "const sevenDaysAgo = new Date();\nsevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);\n\nconst commits = $items('GitHub Commits').map(i => i.json.commit.message);\nconst issues = $items('GitHub Issues').map(i => i.json.title);\nconst prs = $items('GitHub PRs').filter(i => {\n  const mergedAt = i.json.merged_at;\n  return mergedAt && new Date(mergedAt) > sevenDaysAgo;\n}).map(i => i.json.title);\n\nconst lang = $node[\"Set Variables\"].json[\"LANGUAGE\"] || 'EN';\n\nconst headers = {\n  'EN': {\n    'highlights': '🚀 Highlights',\n    'updates': '🛠️ Development Updates',\n    'bugs': '🐛 Bug Fixes & Issues',\n    'progress': '📈 Overall Progress'\n  },\n  'FR': {\n    'highlights': '🚀 Points forts',\n    'updates': '🛠️ Mises à jour du développement',\n    'bugs': '🐛 Corrections de bugs et problèmes',\n    'progress': '📈 Progrès global'\n  },\n  'ES': {\n    'highlights': '🚀 Puntos destacados',\n    'updates': '🛠️ Actualizaciones de desarrollo',\n    'bugs': '🐛 Correcciones de errores y problemas',\n    'progress': '📈 Progreso general'\n  },\n  'DE': {\n    'highlights': '🚀 Highlights',\n    'updates': '🛠️ Entwicklungs-Updates',\n    'bugs': '🐛 Fehlerbehebungen & Probleme',\n    'progress': '📈 Gesamtfortschritt'\n  }\n};\n\nconst h = headers[lang] || headers['EN'];\n\nreturn {\n  prompt: `Act as a Senior Developer Relations Engineer. Your task is to generate a high-quality, narrative weekly summary of the following GitHub activity in ${lang}.\\n\\nTarget Audience: Project maintainers and community members.\\nTone: Professional, encouraging, and clear.\\n\\nCommits from past 7 days:\\n${commits.length > 0 ? commits.join('\\n') : 'No commits this week.'}\\n\\nClosed Issues:\\n${issues.length > 0 ? issues.join('\\n') : 'No issues closed this week.'}\\n\\nMerged Pull Requests:\\n${prs.length > 0 ? prs.join('\\n') : 'No PRs merged this week.'}\\n\\nStructure your response as follows:\\n1. ${h.highlights} (2-3 key achievements)\\n2. ${h.updates} (Narrative summary of commits and PRs)\\n3. ${h.bugs} (Summary of resolved items)\\n4. ${h.progress} (1 sentence summary of the week's momentum)\\n\\nEnsure the output is in ${lang}.`\n};"
       },
       "id": "e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b",
       "name": "Format Prompt",
@@ -185,7 +189,7 @@
       "typeVersion": 1,
       "position": [
         1200,
-        150
+        100
       ]
     },
     {
@@ -205,7 +209,27 @@
       "typeVersion": 1,
       "position": [
         1200,
-        450
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $node[\"Set Variables\"].json[\"EMAIL_DESTINATION\"] }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "g4h5i6j7-k8l9-0m1n-2o3p-4q5r6s7t8u9v",
+      "name": "If Email Enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        550
       ]
     },
     {
@@ -225,7 +249,7 @@
       "typeVersion": 1,
       "position": [
         1200,
-        300
+        250
       ]
     },
     {
@@ -247,7 +271,7 @@
       "typeVersion": 4,
       "position": [
         1400,
-        100
+        50
       ]
     },
     {
@@ -264,7 +288,7 @@
       "typeVersion": 1,
       "position": [
         1400,
-        300
+        250
       ],
       "credentials": {
         "githubApi": {
@@ -291,8 +315,29 @@
       "typeVersion": 4,
       "position": [
         1400,
-        500
+        450
       ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "n8n-weekly-summary@yourdomain.com",
+        "toEmail": "={{ $node[\"Set Variables\"].json[\"EMAIL_DESTINATION\"] }}",
+        "subject": "=Weekly GitHub Summary: {{ $node[\"Set Variables\"].json[\"REPO_NAME\"] }}",
+        "text": "={{ $json.text }}"
+      },
+      "id": "h5i6j7k8-l9m0-n1o2-p3q4-r5s6t7u8v9w0",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        600
+      ],
+      "credentials": {
+        "gmailApi": {
+          "id": "gmail-cred-id"
+        }
+      }
     }
   ],
   "connections": {
@@ -389,6 +434,11 @@
             "node": "If Slack Enabled",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "If Email Enabled",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -420,6 +470,17 @@
         [
           {
             "node": "Send to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Email Enabled": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
             "type": "main",
             "index": 0
           }
